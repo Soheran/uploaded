@@ -1,0 +1,20 @@
+{
+    "name": "meme3",
+    "symbol": "AAT",
+    "description": "Part of the Aires Applied Technology Intern Collection 3/3",
+    "image": "https://raw.githubusercontent.com/Soheran/uploaded/main/lol.webp",
+    "attributes": [
+        {
+            "trait_type": "Number",
+            "value": "0"
+        }
+    ],
+    "properties": {
+        "files": [
+            {
+                "uri": "https://raw.githubusercontent.com/Soheran/uploaded/main/lol.webp",
+                "type": "image/jpeg"
+            }
+        ]
+    }
+}

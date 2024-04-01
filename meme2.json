@@ -1,0 +1,20 @@
+{
+    "name": "meme2",
+    "symbol": "AAT",
+    "description": "Part of the Aires Applied Technology Intern Collection 2/3",
+    "image": "https://raw.githubusercontent.com/Soheran/uploaded/main/dog2.webp",
+    "attributes": [
+        {
+            "trait_type": "Number",
+            "value": "0"
+        }
+    ],
+    "properties": {
+        "files": [
+            {
+                "uri": "https://raw.githubusercontent.com/Soheran/uploaded/main/dog2.webp",
+                "type": "image/jpeg"
+            }
+        ]
+    }
+}
