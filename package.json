@@ -10,12 +10,8 @@
   },
   "dependencies": {
     "buffer": "^6.0.3",
-    "expo": "^51.0.0",
-    "expo-av": "^14.0.4",
     "express": "^4.19.2",
     "multer": "^1.4.5-lts.1",
-    "react": "18.2.0",
-    "react-native": "0.74.1",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5"
   },
