@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -53,22 +54,17 @@ io.on('connection', async (socket) => {
     socket.join(data.room);
     console.log(`${data.name} joined room ${data.room}`);
   
-    // Store the username in the socket object
     socket.username = data.name;
   
-    // Get all sockets in the room
     const socketsInRoom = await io.in(data.room).fetchSockets();
     const usernames = socketsInRoom.map(socket => socket.username);
     
-    // Emit the list of usernames to all clients in the room
     io.to(data.room).emit('usernames', usernames);
     
-    // Emit the number of clients to all clients in the room
     const connectedClientsCount = socketsInRoom.length;
     io.to(data.room).emit('clientCount', connectedClientsCount);
     console.log(`Number of Clients in Room ${data.room}: ${connectedClientsCount}`);
   
-    // Emit a message to all clients in the room about the new client
     io.to(data.room).emit('message', { name: 'Server', message: `${data.name} has joined the room. Total clients: ${connectedClientsCount}` });
   });
 
@@ -81,59 +77,37 @@ io.on('connection', async (socket) => {
     socket.leave(data.room);
     console.log(`${data.name} left room ${data.room}`);
   
-    // Get all sockets in the room
     const socketsInRoom = await io.in(data.room).fetchSockets();
   
-    // Remove the username from the socket object
     delete socket.username;
   
-    // Recalculate the number of connected clients
     const connectedClientsCount = socketsInRoom.length;
   
-    // Get the updated list of usernames
     const usernames = socketsInRoom.map(socket => socket.username);
   
-    // Emit the updated list of usernames to all clients in the room
     io.to(data.room).emit('usernames', usernames);
   
-    // Emit the updated number of clients to all clients in the room
     io.to(data.room).emit('clientCount', connectedClientsCount);
     console.log(`Number of Clients in Room ${data.room}: ${connectedClientsCount}`);
   
-    // Emit a message to all clients in the room about the user leaving
     io.to(data.room).emit('message', { name: 'Server', message: `${data.name} has left the room. Total clients: ${connectedClientsCount}` });
   });
 
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
+
+  // WebRTC signaling events
   socket.on('offer', (data) => {
-    console.log(`Offer from ${data.sdp}`);
-    io.to(data.target).emit('offer', {
-      sdp: data.sdp,
-      sender: socket.id,
-    });
+    io.to(data.room).emit('offer', data.offer);
   });
 
   socket.on('answer', (data) => {
-    console.log(`Answer from ${data.sdp}`);
-    io.to(data.target).emit('answer', {
-      sdp: data.sdp,
-      sender: socket.id,
-    });
+    io.to(data.room).emit('answer', data.answer);
   });
 
-  socket.on('ice-candidate', (data) => {
-    console.log(`ICE Candidate from ${data.candidate}`);
-    io.to(data.target).emit('ice-candidate', {
-      candidate: data.candidate,
-      sender: socket.id,
-    });
-  });
-
-  socket.on('disconnect', async () => {
-    console.log('Client disconnected');
-    const socketsInRoom = await io.in(socket.room).fetchSockets();
-    const usernames = socketsInRoom.map(socket => socket.username);
-    io.to(socket.room).emit('usernames', usernames);
-    io.to(socket.room).emit('clientCount', socketsInRoom.length);
+  socket.on('candidate', (data) => {
+    io.to(data.room).emit('candidate', data.candidate);
   });
 });
 
