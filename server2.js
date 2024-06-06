@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -53,19 +52,27 @@ io.on('connection', async (socket) => {
   socket.on('joinRoom', async (data) => {
     socket.join(data.room);
     console.log(`${data.name} joined room ${data.room}`);
-  
     socket.username = data.name;
-  
     const socketsInRoom = await io.in(data.room).fetchSockets();
     const usernames = socketsInRoom.map(socket => socket.username);
-    
     io.to(data.room).emit('usernames', usernames);
-    
     const connectedClientsCount = socketsInRoom.length;
     io.to(data.room).emit('clientCount', connectedClientsCount);
     console.log(`Number of Clients in Room ${data.room}: ${connectedClientsCount}`);
-  
     io.to(data.room).emit('message', { name: 'Server', message: `${data.name} has joined the room. Total clients: ${connectedClientsCount}` });
+  });
+
+  // Handle WebRTC signaling messages
+  socket.on('offer', (data) => {
+    socket.to(data.room).emit('offer', data);
+  });
+
+  socket.on('answer', (data) => {
+    socket.to(data.room).emit('answer', data);
+  });
+
+  socket.on('ice-candidate', (data) => {
+    socket.to(data.room).emit('ice-candidate', data);
   });
 
   socket.on('message', (data) => {
@@ -76,38 +83,18 @@ io.on('connection', async (socket) => {
   socket.on('leaveRoom', async (data) => {
     socket.leave(data.room);
     console.log(`${data.name} left room ${data.room}`);
-  
     const socketsInRoom = await io.in(data.room).fetchSockets();
-  
     delete socket.username;
-  
     const connectedClientsCount = socketsInRoom.length;
-  
     const usernames = socketsInRoom.map(socket => socket.username);
-  
     io.to(data.room).emit('usernames', usernames);
-  
     io.to(data.room).emit('clientCount', connectedClientsCount);
     console.log(`Number of Clients in Room ${data.room}: ${connectedClientsCount}`);
-  
     io.to(data.room).emit('message', { name: 'Server', message: `${data.name} has left the room. Total clients: ${connectedClientsCount}` });
   });
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
-  });
-
-  // WebRTC signaling events
-  socket.on('offer', (data) => {
-    io.to(data.room).emit('offer', data.offer);
-  });
-
-  socket.on('answer', (data) => {
-    io.to(data.room).emit('answer', data.answer);
-  });
-
-  socket.on('candidate', (data) => {
-    io.to(data.room).emit('candidate', data.candidate);
   });
 });
 
