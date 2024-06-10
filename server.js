@@ -30,5 +30,5 @@ const PORT = 8080;
 const IP = 'localhost';
 
 server.listen(PORT, IP, () => {
-    console.log(Listening on ${IP}:${PORT});
+    console.log(`Listening on ${IP}:${PORT}`);
 });
