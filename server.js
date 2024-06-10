@@ -27,8 +27,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = 8080;
-const IP = 'localhost';
-
-server.listen(PORT, IP, () => {
-    console.log(`Listening on ${IP}:${PORT}`);
-});
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
