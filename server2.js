@@ -80,6 +80,21 @@ io.on('connection', async (socket) => {
     io.to(data.room).emit('message', { name: data.name, message: data.message, type: data.type, content: data.content });
   });
 
+  socket.on('quizData', (data) => {
+    console.log('Quiz data received:', data);
+    io.to(data.room).emit('quizData', data);
+  });
+
+  socket.on('quizQuestion', (data) => {
+    console.log(`Question ${data.currentQuestion} for room ${data.room}`);
+    io.to(data.room).emit('quizQuestion', data);
+  });
+
+  socket.on('quizEnd', (data) => {
+    console.log('Quiz ended, scores:', data);
+    io.to(data.room).emit('quizEnd', data);
+  });
+
   socket.on('leaveRoom', async (data) => {
     socket.leave(data.room);
     console.log(`${data.name} left room ${data.room}`);
