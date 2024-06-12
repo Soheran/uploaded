@@ -43,7 +43,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
     return res.status(400).send('No file uploaded.');
   }
   console.log('File uploaded:', req.file);
-  res.json({ url: `http://${req.headers.host}/uploads/${req.file.filename}` });
+  res.json({ url: `http://192.168.1.159:8080/uploads/${req.file.filename}` });
 });
 
 let rooms = {};
