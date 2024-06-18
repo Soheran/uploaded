@@ -17,8 +17,12 @@ io.on('connection', (socket) => {
     }
     rooms[roomId].push({ id: socket.id, username });
     socket.join(roomId);
+    socket.username = username;
 
-    io.to(roomId).emit('user-joined', { username, users: rooms[roomId].map(user => ({ peerId: user.id, username: user.username })) });
+    io.to(roomId).emit('user-joined', {
+      username,
+      users: rooms[roomId].map(user => ({ peerId: user.id, username: user.username }))
+    });
     console.log(`${username} joined room ${roomId}`);
   });
 
@@ -48,13 +52,24 @@ io.on('connection', (socket) => {
     console.log('Client disconnected');
     for (const roomId in rooms) {
       rooms[roomId] = rooms[roomId].filter(user => user.id !== socket.id);
-      io.to(roomId).emit('user-left', { username: socket.username, users: rooms[roomId].map(user => ({ peerId: user.id, username: user.username })) });
+      io.to(roomId).emit('user-left', {
+        username: socket.username,
+        users: rooms[roomId].map(user => ({ peerId: user.id, username: user.username }))
+      });
       if (rooms[roomId].length === 0) {
         delete rooms[roomId];
       }
     }
   });
+
+  socket.on('file-transfer', (data) => {
+    socket.to(data.peerId).emit('file-transfer', data);
+  });
+
+  socket.on('error', (err) => {
+    console.error('Socket encountered error:', err.message);
+  });
 });
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
