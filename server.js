@@ -7,17 +7,7 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 const rooms = {};
-
-const leaveroom = (socket, roomId) => {
-  if (!rooms[roomId]) return;
-
-  rooms[roomId] = rooms[roomId].filter(user => user.id !== socket.id);
-  io.to(roomId).emit('user-left', { username: socket.username, users: rooms[roomId].map(user => ({ peerId: user.id, username: user.username })) });
-
-  if (rooms[roomId].length === 0) {
-    delete rooms[roomId];
-  }
-};
+const quizzes = {};
 
 io.on('connection', (socket) => {
   console.log('New client connected');
@@ -30,7 +20,10 @@ io.on('connection', (socket) => {
     socket.join(roomId);
     socket.username = username;
 
-    io.to(roomId).emit('user-joined', { username, users: rooms[roomId].map(user => ({ peerId: user.id, username: user.username })) });
+    io.to(roomId).emit('user-joined', {
+      username,
+      users: rooms[roomId].map(user => ({ peerId: user.id, username: user.username }))
+    });
     console.log(`${username} joined room ${roomId}`);
   });
 
@@ -56,19 +49,51 @@ io.on('connection', (socket) => {
     console.log(`Message from ${username} in room ${roomId}: ${message}`);
   });
 
-  socket.on('leave-room', ({ roomId }) => {
-    leaveroom(socket, roomId);
-    socket.leave(roomId);
-    console.log(`${socket.username} left room ${roomId}`);
+  socket.on('file-transfer', (data) => {
+    io.to(data.roomId).emit('file-transfer', data);
+    console.log(`File transfer from ${data.username} in room ${data.roomId}`);
+  });
+
+  socket.on('quiz-start', ({ roomId, questions }) => {
+    quizzes[roomId] = { questions, scores: {} };
+    io.to(roomId).emit('quiz-start', questions);
+    console.log(`Quiz started in room ${roomId}`);
+  });
+
+  socket.on('quiz-answer', ({ roomId, username, score }) => {
+    if (!quizzes[roomId].scores[username]) {
+      quizzes[roomId].scores[username] = 0;
+    }
+    quizzes[roomId].scores[username] += score;
+    io.to(roomId).emit('quiz-answer', { username, score });
+    console.log(`Answer received from ${username} in room ${roomId} with score ${score}`);
+  });
+
+  socket.on('quiz-end', ({ roomId }) => {
+    io.to(roomId).emit('quiz-end');
+    delete quizzes[roomId];
+    console.log(`Quiz ended in room ${roomId}`);
   });
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
     for (const roomId in rooms) {
-      leaveroom(socket, roomId);
+      rooms[roomId] = rooms[roomId].filter(user => user.id !== socket.id);
+      io.to(roomId).emit('user-left', {
+        username: socket.username,
+        users: rooms[roomId].map(user => ({ peerId: user.id, username: user.username }))
+      });
+      if (rooms[roomId].length === 0) {
+        delete rooms[roomId];
+        delete quizzes[roomId];
+      }
     }
+  });
+
+  socket.on('error', (err) => {
+    console.error('Socket encountered error:', err.message);
   });
 });
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
