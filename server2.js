@@ -55,7 +55,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('quiz-start', ({ roomId, questions }) => {
-    quizzes[roomId] = { questions, scores: {} };
+    quizzes[roomId] = { questions, scores: {}, finishedUsers: 0 };
     io.to(roomId).emit('quiz-start', questions);
     console.log(`Quiz started in room ${roomId} with questions:`, questions);
   });
@@ -72,12 +72,16 @@ io.on('connection', (socket) => {
   socket.on('quiz-end', ({ roomId, username, score }) => {
     if (!quizzes[roomId]) return;
     quizzes[roomId].scores[username] = score;
-    const finalScores = Object.entries(quizzes[roomId].scores)
-      .map(([username, score]) => ({ username, score }))
-      .sort((a, b) => b.score - a.score);
-    io.to(roomId).emit('quiz-end', finalScores);
-    console.log(`Quiz ended in room ${roomId} with final scores:`, finalScores);
-    delete quizzes[roomId];
+    quizzes[roomId].finishedUsers += 1;
+
+    if (quizzes[roomId].finishedUsers === rooms[roomId].length) {
+      const finalScores = Object.entries(quizzes[roomId].scores)
+        .map(([username, score]) => ({ username, score }))
+        .sort((a, b) => b.score - a.score);
+      io.to(roomId).emit('quiz-end', finalScores);
+      console.log(`Quiz ended in room ${roomId} with final scores:`, finalScores);
+      delete quizzes[roomId];
+    }
   });
 
   socket.on('disconnect', () => {
