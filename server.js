@@ -8,6 +8,7 @@ const io = socketIo(server);
 
 const rooms = {};
 const quizzes = {};
+const polls = {}; // Polls object to store active polls in each room
 
 io.on('connection', (socket) => {
   console.log('New client connected');
@@ -55,9 +56,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on('quiz-start', ({ roomId, questions }) => {
-    quizzes[roomId] = { questions, scores: {} };
+    quizzes[roomId] = { questions, scores: {}, finishedUsers: 0 };
     io.to(roomId).emit('quiz-start', questions);
-    console.log(`Quiz started in room ${roomId}`);
+    console.log(`Quiz started in room ${roomId} with questions:`, questions);
   });
 
   socket.on('quiz-answer', ({ roomId, username, score }) => {
@@ -69,10 +70,34 @@ io.on('connection', (socket) => {
     console.log(`Answer received from ${username} in room ${roomId} with score ${score}`);
   });
 
-  socket.on('quiz-end', ({ roomId }) => {
-    io.to(roomId).emit('quiz-end');
-    delete quizzes[roomId];
-    console.log(`Quiz ended in room ${roomId}`);
+  socket.on('quiz-end', ({ roomId, username, score }) => {
+    if (!quizzes[roomId]) return;
+    quizzes[roomId].scores[username] = score;
+    quizzes[roomId].finishedUsers += 1;
+
+    if (quizzes[roomId].finishedUsers === rooms[roomId].length) {
+      const finalScores = Object.entries(quizzes[roomId].scores)
+        .map(([username, score]) => ({ username, score }))
+        .sort((a, b) => b.score - a.score);
+      io.to(roomId).emit('quiz-end', finalScores);
+      console.log(`Quiz ended in room ${roomId} with final scores:`, finalScores);
+      delete quizzes[roomId];
+    }
+  });
+
+  // Handle poll related events
+  socket.on('poll-start', ({ roomId, question, options }) => {
+    polls[roomId] = { question, options, votes: {} };
+    io.to(roomId).emit('poll-start', { question, options });
+    console.log(`Poll started in room ${roomId} with question: ${question}`);
+  });
+
+  socket.on('poll-vote', ({ roomId, option }) => {
+    if (polls[roomId] && !polls[roomId].votes[socket.id]) {
+      polls[roomId].votes[socket.id] = option;
+      io.to(roomId).emit('poll-vote', { username: socket.username, option });
+      console.log(`User ${socket.username} voted for option ${option} in room ${roomId}`);
+    }
   });
 
   socket.on('disconnect', () => {
@@ -86,6 +111,7 @@ io.on('connection', (socket) => {
       if (rooms[roomId].length === 0) {
         delete rooms[roomId];
         delete quizzes[roomId];
+        delete polls[roomId]; // Remove poll data when room becomes empty
       }
     }
   });
