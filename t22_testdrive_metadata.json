@@ -1,0 +1,12 @@
+{
+    "name": "TestDrive",
+    "symbol": "TDT",
+    "description": "Test tokens",
+    "image": "https://raw.githubusercontent.com/Soheran/uploaded/main/D6.webp",
+    "attributes": [
+      {
+        "trait_type": "Item",
+        "value": "Developer Token"
+      }
+    ]
+}
