@@ -2,5 +2,11 @@
     "name": "Digg Dogg",
     "symbol": "DDS",
     "description": "Digg Dogg the new generation of solana tokens",
-    "image": "https://hurt-lime-possum.myfilebase.com/ipfs/QmcG5fhzbJZQmNAGDWx1ihPjNA6Fpw1E5Nrcn5R6qsASnS"
+    "image": "https://hurt-lime-possum.myfilebase.com/ipfs/QmcG5fhzbJZQmNAGDWx1ihPjNA6Fpw1E5Nrcn5R6qsASnS",
+    "attributes": [
+      {
+        "trait_type": "Item",
+        "value": "Developer Token"
+      }
+    ]
 }
