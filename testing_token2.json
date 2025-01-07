@@ -1,0 +1,12 @@
+{
+    "name": "Testing Tokens 2",
+    "symbol": "TT12345",
+    "description": "Testing new tokens",
+    "image": "https://raw.githubusercontent.com/Soheran/uploaded/main/D6.webp",
+    "attributes": [
+      {
+        "trait_type": "Item",
+        "value": "Developer Token"
+      }
+    ]
+}
